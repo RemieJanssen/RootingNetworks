@@ -408,46 +408,60 @@ def LevelStuff(network,length,ClassChecker=ClassAllNetworks):
     rootComponent = IsRootedTree(T_CN)
     if not type(rootComponent)==int:
         return False
-    #Find a blob in the rootComponent
-    nodeOfRootBlob = list(T_CN.nodes(data=True)[rootComponent]['members'])[0]
-    #Make an empty list to store all reticulations of the orientation
-    reticulations = []
-    #Find a blob that may contain the root edge, and then pick a root edge
-    for i,blob in enumerate(blobs):
-        if nodeOfRootBlob in blob:
-            if len(blob)>2:
-                rootBlobOrientations = blobOrientations[i]
-                rootEdge = list(rootBlobOrientations.keys())[0]
-                currentBlobIndex = i
-                break
-            if len(blob)==2:
-                #TODO What if such a bigger blob does not exist, because we chose a node between two blobs?!!!!
-                print("FIX THIS!!")
-                
-    reticulations+=rootBlobOrientations[rootEdge]
-    #Continue to root all other blobs, by moving away from the blob with the root.
-    #edgesToContinueAt keeps a list of edges along which we still have to move away from the root
-    edgesToContinueAt = LeafEdges(blobs[currentBlobIndex])
-    while edgesToContinueAt:
-        edge = edgesToContinueAt.pop()
-        for i,blob in enumerate(blobs):
-            if edge[1] in blob :
-                #Continue at trivial biconnected components with an endpoint edge[1] (but not edge[0], to prevent cycling in the algorithm)
-                if len(blob)==2 and edge[0] not in blob:
-                    otherNode = False
-                    for v in blob:
-                        if v!= edge[1]:
-                            otherNode = v
-                    edgesToContinueAt.add((edge[1],otherNode))
-                #Continue at blobs that contain edge[1] in the interior (so the degree of edge[1] in the blob is not 1)
-                elif len(blob)>2 and blob.degree(edge[1])!=1:
-                    edgesToContinueAt|= LeafEdges(blob)-set([(edge[1],edge[0])])
-                    if edge in blobOrientations[i]:
-                        reticulations+=blobOrientations[i][edge]
-                    else:
-                        reticulations+=blobOrientations[i][(edge[1],edge[0])]
-                    break
-    return (rootEdge, reticulations)
+        
+    #Go through all edges to find all orientations    
+    rootings = dict()
+    rootComponentNodes = T_CN.nodes(data=True)[rootComponent]['members']
+    for rootEdge in network.edges:
+        reticulations = []
+        edgesToContinueAt = False
+        #Check if the edge is in the rootComponent
+        if rootEdge[0] in rootComponentNodes and rootEdge[1] in rootComponentNodes:
+            #Check if the edge is a root edge of one of the blobs
+            for i,blob in enumerate(blobs):
+                if blob.has_edge(*rootEdge):
+                    if len(blob)==2:
+                        edgesToContinueAt = set([rootEdge,(rootEdge[1],rootEdge[0])])
+                        break
+                    elif rootEdge in blobOrientations[i]: 
+                        reticulations+=blobOrientations[i][rootEdge]
+                        edgesToContinueAt = LeafEdges(blob)
+                        break
+                    elif (rootEdge[1],rootEdge[0]) in blobOrientations[i]:
+                        reticulations+=blobOrientations[i][(rootEdge[1],rootEdge[0])]
+                        edgesToContinueAt = LeafEdges(blob)
+                        break
+            #If it is a root edge, continue finding the whole orientation
+            if edgesToContinueAt:     
+                #Continue to root all other blobs, by moving away from the blob with the root.
+                #edgesToContinueAt keeps a list of edges along which we still have to move away from the root
+                while edgesToContinueAt:
+                    edge = edgesToContinueAt.pop()
+                    for i,blob in enumerate(blobs):
+                        if edge[1] in blob :
+                            #Continue at trivial biconnected components with an endpoint edge[1] (but not edge[0], to prevent cycling in the algorithm)
+                            if len(blob)==2 and edge[0] not in blob:
+                                otherNode = False
+                                for v in blob:
+                                    if v!= edge[1]:
+                                        otherNode = v
+                                edgesToContinueAt.add((edge[1],otherNode))
+                            #Continue at blobs that contain edge[1] in the interior (so the degree of edge[1] in the blob is not 1)
+                            elif len(blob)>2 and blob.degree(edge[1])!=1:
+                                edgesToContinueAt|= LeafEdges(blob)-set([(edge[1],edge[0])])
+                                if edge in blobOrientations[i]:
+                                    reticulations+=blobOrientations[i][edge]
+                                else:
+                                    reticulations+=blobOrientations[i][(edge[1],edge[0])]
+                                break
+                rootings[rootEdge]=reticulations
+    return rootings
+
+            
+            
+            
+            
+                   
 
 #Returns a list of leaf edges in the order (neighbor,leaf) for each edge
 def LeafEdges(network):

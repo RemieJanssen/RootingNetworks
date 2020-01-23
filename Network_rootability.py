@@ -111,18 +111,22 @@ network.add_edges_from(edges)
 #####################################################################
 #####################################################################
 
-orientation = LevelStuff(network,length,ClassChecker)
+orientations = LevelStuff(network,length,ClassChecker)
 
 
 output = ""
-if orientation:
-    rootEdge, reticulations = orientation
+if orientations:
     if option_simple:
-        output = "The root edge is:\r\n   "+str(rootEdge)+"\r\nThe reticulations are:\r\n   "+str(reticulations)
+        output += "The root edges and reticulations are:"
     else:
-        #compute the actual orientation, instead of only the retculations.
-        dinetwork = OrientationAlgorithmBinary(network,rootEdge,reticulations)
-        output = "The orientation of the network consists of the following arcs:\r\n   "+str(dinetwork.edges)
+        output += "The orientations of the network consist of the following arcs:\r\n"
+    for rootEdge, reticulations in orientations.items():
+        if option_simple:
+            output += "\r\n\r\nroot edge:\r\n   "+str(rootEdge)+"\r\nreticulations:\r\n   "+str(reticulations)
+        else:
+            #compute the actual orientation, instead of only the retculations.
+            dinetwork = OrientationAlgorithmBinary(network,rootEdge,reticulations)
+            output += "\r\n"+str(dinetwork.edges)
 else:
     output = "There is no orientation of the given network in the desired class."
 
