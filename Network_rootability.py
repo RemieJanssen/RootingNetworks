@@ -54,7 +54,7 @@ if nwClass == "TC":
     ClassChecker = ClassTreeChild
     length = 3
 elif nwClass == "SF":
-    ClassChecker = ClassStackfree
+    ClassChecker = ClassStackFree
     length = 3
 elif nwClass == "O":
     ClassChecker = ClassOrchard

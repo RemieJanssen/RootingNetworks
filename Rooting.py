@@ -234,6 +234,7 @@ def ClassRootableStupid(network,ClassChecker=ClassAllNetworks):
 ###############################################
 
 #Produces the generator includingDeg2Nodes
+#Assumes no pendant subtrees
 def GeneratorWithDeg2(network):
     generator = deepcopy(network)
     todoNodes = list(generator.nodes)
@@ -257,6 +258,7 @@ def CompleteSide(generator,generatorNode,sideNode):
     return side
         
 #Returns all sides of the network
+#Assumes no pendant subtrees
 def FindSides(network):
     generator = GeneratorWithDeg2(network)    
     todoNodes = list(generator.nodes)
@@ -281,6 +283,7 @@ def FindSides(network):
         
 #Reduces chains in the network using the set of sides
 #When reducing, it removes internal nodes of the chain.
+#Assumes no pendant subtrees
 def ReduceChains(network, length):
     sides = FindSides(network)
     sidesDict = dict()
@@ -309,6 +312,7 @@ def ReduceChains(network, length):
 #Determines all root-edges of network
 #Uses ClassChecker to check whether an orientation is in the desired class
 #Uses that the class is length-chain reducible, blob-determined, and leaf-addable
+#Assumes there are no pendant subtrees
 def ReductionRooting(network,length,ClassChecker=ClassAllNetworks):
     redNw,sidesDict = ReduceChains(network,length)
     redRootings = ClassRootableStupid(redNw,ClassChecker)
@@ -370,7 +374,7 @@ def ReductionRooting(network,length,ClassChecker=ClassAllNetworks):
 #Uses that the class is length-chain reducible, blob-determined, and leaf-addable
 def LevelStuff(network,length,ClassChecker=ClassAllNetworks):
     #Calculate the blobs
-    blobs = list(nx.biconnected_component_subgraphs(network))
+    blobs = list((network.subgraph(c).copy() for c in nx.biconnected_components(network)))
     #Prepare the partially directed network that we will condense into T_CN
     partiallyOrientedNetwork = network.to_directed()
     #Empty list to store all orientations for all blobs
