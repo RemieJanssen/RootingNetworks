@@ -314,6 +314,9 @@ def ReduceChains(network, length):
 #Uses that the class is length-chain reducible, blob-determined, and leaf-addable
 #Assumes there are no pendant subtrees
 def ReductionRooting(network,length,ClassChecker=ClassAllNetworks):
+    if length<=2 and len(network.edges)==len(network.nodes):
+        #In this case, the chain reduction would result in parallel edges, so keep the chain length 3 in this case.
+        length = 3
     redNw,sidesDict = ReduceChains(network,length)
     redRootings = ClassRootableStupid(redNw,ClassChecker)
     rootings = dict()
