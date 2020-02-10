@@ -364,7 +364,18 @@ def ReductionRooting(network,length,ClassChecker=ClassAllNetworks):
                         sideNode = side[j]
                         for nb in network.neighbors(sideNode):
                             if network.degree(nb)==1:
-                                rootings[(sideNode,nb)] = rootingAtEdge
+                                #be careful with inferring orientation: the reticulation can be at sideNode in the reduced network. In that case, shift the reticulation to the left one node                                
+                                if sideNode in rootingAtEdge:
+                                    newRooting = []
+                                    for reticNode in rootingAtEdge:
+                                        if reticNode == sideNode:
+                                            newRooting+=[side[j+1]]
+                                        else:
+                                            newRooting+=[reticNode]
+                                    newRooting = tuple(newRooting)
+                                else:
+                                    newRooting = rootingAtEdge
+                                rootings[(sideNode,nb)] = newRooting
                     #Now the internal edges of the side
                     for j in range(i-1,n-(length-i)+1):
                         rootings[(side[j],side[j+1])] = rootingAtEdge
@@ -414,7 +425,8 @@ def LevelStuff(network,length,ClassChecker=ClassAllNetworks):
     #Find the root of T_CN if it exists; if it does not, the network is not C-orientable
     rootComponent = IsRootedTree(T_CN)
     if not type(rootComponent)==int:
-        return False
+        return False    
+        
         
     #Go through all edges to find all orientations    
     rootings = dict()

@@ -113,20 +113,26 @@ network.add_edges_from(edges)
 
 orientations = LevelStuff(network,length,ClassChecker)
 
-
 output = ""
 if orientations:
-    if option_simple:
-        output += "The root edges and reticulations are:"
+    rootableEdges = orientations.keys()
+    #print("rootable at: ", rootableEdges)
+    #print("not at: ", set(network.edges)-set(rootableEdges))
+    if not option_simple:
+        output += "The root edges, reticulations and orientations are:"
     else:
-        output += "The orientations of the network consist of the following arcs:\r\n"
+        output += "The orientations of the network consist of the following root edges and reticulations:\r\n"
     for rootEdge, reticulations in orientations.items():
-        if option_simple:
-            output += "\r\n\r\nroot edge:\r\n   "+str(rootEdge)+"\r\nreticulations:\r\n   "+str(reticulations)
+        #compute the actual orientation, instead of only the retculations.
+        dinetwork = OrientationAlgorithmBinary(network,rootEdge,reticulations)
+        if not option_simple:
+            output += "\r\n\r\nroot edge:\r\n   "+str(rootEdge)+"\r\nreticulations:\r\n   "+str(reticulations)+"\r\norientation:\r\n   "+str(dinetwork.edges)
         else:
-            #compute the actual orientation, instead of only the retculations.
-            dinetwork = OrientationAlgorithmBinary(network,rootEdge,reticulations)
-            output += "\r\n"+str(dinetwork.edges)
+            output += "\r\n"+str(rootEdge)+" "+str(reticulations)
+    if not option_simple:
+        output+="\r\n\r\nThe network cannot be rooted at the edges:"
+        for non_root in set(network.edges)-set(rootableEdges):
+            output+="\r\n"+str(non_root)
 else:
     output = "There is no orientation of the given network in the desired class."
 
