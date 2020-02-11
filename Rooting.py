@@ -364,12 +364,15 @@ def ReductionRooting(network,length,ClassChecker=ClassAllNetworks):
                         sideNode = side[j]
                         for nb in network.neighbors(sideNode):
                             if network.degree(nb)==1:
-                                #be careful with inferring orientation: the reticulation can be at sideNode in the reduced network. In that case, shift the reticulation to the left one node                                
+                                #be careful with inferring orientation: the reticulation can be at sideNode in the reduced network. 
+                                #In that case, shift the reticulation to the relative position to the root as in the reduced network
                                 if sideNode in rootingAtEdge:
                                     newRooting = []
                                     for reticNode in rootingAtEdge:
                                         if reticNode == sideNode:
-                                            newRooting+=[side[j+1]]
+                                            #Current position of the root and the reticulation is j
+                                            #In the reduced side, the root is at position i, and the retic at position j, a difference of j-i.
+                                            newRooting+=[side[j+j-i]]
                                         else:
                                             newRooting+=[reticNode]
                                     newRooting = tuple(newRooting)
