@@ -363,25 +363,43 @@ def ReductionRooting(network,length,ClassChecker=ClassAllNetworks):
                         #Find the leaf edge at position j
                         sideNode = side[j]
                         for nb in network.neighbors(sideNode):
-                            if network.degree(nb)==1:
-                                #be careful with inferring orientation: the reticulation can be at sideNode in the reduced network. 
-                                #In that case, shift the reticulation to the relative position to the root as in the reduced network
-                                if sideNode in rootingAtEdge:
-                                    newRooting = []
-                                    for reticNode in rootingAtEdge:
-                                        if reticNode == sideNode:
-                                            #Current position of the root and the reticulation is j
-                                            #In the reduced side, the root is at position i, and the retic at position j, a difference of j-i.
-                                            newRooting+=[side[j+j-i]]
-                                        else:
-                                            newRooting+=[reticNode]
-                                    newRooting = tuple(newRooting)
-                                else:
-                                    newRooting = rootingAtEdge
-                                rootings[(sideNode,nb)] = newRooting
+                            if network.degree(nb)==1: # If this holds, we have found the corresponding leaf, so the leaf edge is (sideNode,nb)
+                                leafEdge = (sideNode,nb)
+                                break
+                        #Now we extend to an orientation of the original network
+                        #be careful with inferring orientation: there can be a reticulation on the root side.
+                        #In that case, shift the reticulation to the relative position to the root as in the reduced network
+                        newRooting = []
+                        for reticNode in rootingAtEdge:
+                            if reticNode in redSide[1:-1]:
+                                #Here, we have found a reticulation node reticNode on the reduced side containing the root.
+                                #We find its position on the reduced side, and give it the same relative position to the root on the original network
+                                reducedIndex = redSide.index(reticNode)
+                                #Current position of the root is j
+                                #In the reduced side, the root is at position i, and the retic at position reducedIndex, a difference of reducedIndex-i.
+                                newRooting+=[side[j+reducedIndex-i]]
+                            else:
+                                #If the reticulation node is not on the root side, we can take this node as the reticulation (by placing the leaves back where they were removed)
+                                newRooting+=[reticNode]
+                        rootings[leafEdge] = tuple(newRooting)
                     #Now the internal edges of the side
                     for j in range(i-1,n-(length-i)+1):
-                        rootings[(side[j],side[j+1])] = rootingAtEdge
+                        #Do something similar as for the leaf edges, to find the right reticulation node on the root side
+                        newRooting = []
+                        for reticNode in rootingAtEdge:
+                            if reticNode in redSide[1:-1]:
+                                reducedIndex = redSide.index(reticNode)
+                                #In the reduced side, the root is at position i, and the retic at position reducedIndex, a difference of reducedIndex-i.
+                                #To make up for the fact that a new leaf is introduced between positions j and j+1 when we root at an internal edge
+                                #we correct the new position as follows:
+                                relativePosition = reducedIndex-i
+                                if reducedIndex<i:
+                                    relativePosition+=1
+                                newRooting+=[side[j+relativePosition]]
+                            else:
+                                #If the reticulation node is not on the root side, we can take this node as the reticulation (by placing the leaves back where they were removed)
+                                newRooting+=[reticNode]
+                        rootings[(side[j],side[j+1])] = tuple(newRooting)                        
     return rootings
 
         
