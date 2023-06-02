@@ -1,6 +1,5 @@
 import networkx as nx
 import itertools
-import matplotlib.pyplot as plt
 import sys
 from copy import deepcopy
 
