@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "phyloroot"
-version = "0.0.2"
+version = "0.1.0"
 authors = [
   { name="Remie Janssen", email="remiejanssen92@gmail.com" },
 ]
@@ -23,3 +23,6 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/RemieJanssen/RootingNetworks"
 "Bug Tracker" = "https://github.com/RemieJanssen/RootingNetworks/issues"
+
+[project.scripts]
+phyloroot = "phyloroot.main_cli:main"
