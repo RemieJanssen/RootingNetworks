@@ -25,4 +25,4 @@ classifiers = [
 "Bug Tracker" = "https://github.com/RemieJanssen/RootingNetworks/issues"
 
 [project.scripts]
-phyloroot = "phyloroot.network_rootability:main"
+phyloroot = "phyloroot.main_cli:main"
