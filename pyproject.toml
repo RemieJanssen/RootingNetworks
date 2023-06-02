@@ -23,3 +23,6 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/RemieJanssen/RootingNetworks"
 "Bug Tracker" = "https://github.com/RemieJanssen/RootingNetworks/issues"
+
+[project.scripts]
+phyloroot = "phyloroot.network_rootability:main"
