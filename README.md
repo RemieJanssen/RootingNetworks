@@ -6,7 +6,7 @@ Phyloroot is a python module with tools for orienting undirected phylogenetic ne
 
 Install as pypi package phyloroot:
 ```
-    pip install phyloroot
+pip install phyloroot
 ```
 
 ## Usage
