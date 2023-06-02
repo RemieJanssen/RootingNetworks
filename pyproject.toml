@@ -1,0 +1,25 @@
+[build-system]
+requires = [
+    "setuptools>=61.0",
+    "networkx>=3.1",    
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phyloroot"
+version = "0.0.2"
+authors = [
+  { name="Remie Janssen", email="remiejanssen92@gmail.com" },
+]
+description = "A package for orienting phylogenetic networks in several well-known classes."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/RemieJanssen/RootingNetworks"
+"Bug Tracker" = "https://github.com/RemieJanssen/RootingNetworks/issues"
