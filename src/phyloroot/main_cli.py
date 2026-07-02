@@ -24,7 +24,7 @@ def read_network_file(filename):
 def get_class_checker_and_chain_length(nwClass):
     """Set the class parameters corresponding to nwClass abbreviation"""
     ClassChecker = ClassAllNetworks
-    length = 1
+    length = 2
     if nwClass == "TC":
         ClassChecker = ClassTreeChild
         length = 3

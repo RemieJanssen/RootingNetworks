@@ -1,0 +1,54 @@
+name: Python package
+
+on:
+  push:
+    branches:
+      - main
+      - fixes_*
+  pull_request:
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.version.system}}
+    strategy:
+      matrix:
+        version:
+          - python: "3.7"
+            system: ubuntu-22.04
+          - python: "3.8"
+            system: ubuntu-latest
+          - python: "3.9"
+            system: ubuntu-latest
+          - python: "3.10"
+            system: ubuntu-latest
+          - python: "3.11"
+            system: ubuntu-latest
+          - python: "3.12"
+            system: ubuntu-latest
+          - python: "3.13"
+            system: ubuntu-latest
+          - python: "3.14"
+            system: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.version.python }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.version.python }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pytest pytest-cov
+          pip install .
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      # - name: Lint with ruff
+      #   run: |
+      #     # stop the build if there are Python syntax errors or undefined names
+      #     ruff --format=github --select=E9,F63,F7,F82 --target-version=py37 .
+      #     # default set of ruff rules with GitHub Annotations
+      #     ruff --format=github --target-version=py37 .
+      - name: Test with pytest
+        run: |
+          pytest
