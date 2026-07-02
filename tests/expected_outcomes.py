@@ -1,4 +1,4 @@
-from phyloroot.rooting import is_network, is_tree_child, is_stack_free, is_orchard, is_tree_based
+from phyloroot.class_checkers import is_network, is_tree_child, is_stack_free, is_orchard, is_tree_based
 
 outcomes = {
     "Example1-Components.txt": {

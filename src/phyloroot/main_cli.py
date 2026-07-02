@@ -1,8 +1,10 @@
-from .rooting import *
 import networkx as nx
 import csv
 import argparse
 
+from phyloroot.class_checkers import is_network, is_tree_child, is_stack_free, is_orchard, is_tree_based
+from phyloroot.rooting import c_orientation_fpt_level
+from phyloroot.constrained_orientation import constrained_orientation_binary
 
 def read_network_file(filename):
     # Parse the network in <filename>
@@ -104,7 +106,7 @@ def main():
     cmd_args = cmd_parser()
     network = read_network_file(cmd_args.file)
     ClassChecker, length = get_class_checker_and_chain_length(cmd_args.classname)
-    orientations = LevelStuff(network, length, ClassChecker)
+    orientations = c_orientation_fpt_level(network, length, ClassChecker)
     output = set_output(network, orientations, cmd_args.simple)
 
     # write output to file or to the shell
