@@ -20,3 +20,26 @@ For more information, use the help function:
 ```
 phyloroot -h
 ```
+
+
+## Development
+
+For a development version, simply pull the project and in the home of the project do:
+```
+pip install -e .
+```
+This installs the phyloroot package from the source. When you change things in the source, the package gets updated as well.
+
+### Release
+
+set new version number in master branch
+ - CHANGELOG.md
+ - pyproject.toml
+
+release current version
+```
+git checkout release
+git merge main
+git tag [version number]
+git push --atomic origin release [version number]
+```
