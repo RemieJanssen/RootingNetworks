@@ -1,7 +1,5 @@
 from .rooting import *
 import networkx as nx
-import os
-import sys
 import csv
 import argparse
 

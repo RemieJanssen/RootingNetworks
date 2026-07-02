@@ -10,7 +10,7 @@ def is_tree_child(network):
             node_is_tree_child = True
         for child in network.successors(node):
             # The node is tree-child if at least one of its children is a leaf or a tree-node
-            if network.out_degree(child) in [0,2]:
+            if network.out_degree(child) in [0, 2]:
                 node_is_tree_child = True
         if not node_is_tree_child:
             return False
