@@ -1,13 +1,12 @@
 [build-system]
 requires = [
     "setuptools>=61.0",
-    "networkx>=3.1",    
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "phyloroot"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
   { name="Remie Janssen", email="remiejanssen92@gmail.com" },
 ]
@@ -19,6 +18,10 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+  "networkx>=2.6",
+]
+
 
 [project.urls]
 "Homepage" = "https://github.com/RemieJanssen/RootingNetworks"

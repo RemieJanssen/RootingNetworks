@@ -31,8 +31,8 @@ def IsRootedTree(digraph):
 #In particular, for each phylogenetic network, it returns True.
 def ClassAllNetworks(network):
     return True
-    
-#A function that returns True iff the given network is tree-child.    
+
+#A function that returns True iff the given network is tree-child.
 def ClassTreeChild(network):
     for node in network.nodes:
         tc_node = False
@@ -46,7 +46,7 @@ def ClassTreeChild(network):
             return False
     return True
 
-#A function that returns True iff the given network is stack-free.    
+#A function that returns True iff the given network is stack-free.
 def ClassStackFree(network):
     for node in network.nodes:
         sf_node = True
@@ -58,17 +58,17 @@ def ClassStackFree(network):
         if not sf_node:
             return False
     return True
-    
-#A function that returns True iff the given network is tree-based.    
+
+#A function that returns True iff the given network is tree-based.
 def ClassTreeBased(network):
     for node in network.nodes:
         if network.out_degree(node)==1:
             if AtWFence(network,node):
                 return False
     return True
-    
 
-#A function that returns True iff the given network is orchard.    
+
+#A function that returns True iff the given network is orchard.
 def ClassOrchard(network):
     redNw = deepcopy(network)
     leaves = set()
@@ -76,7 +76,7 @@ def ClassOrchard(network):
         if redNw.out_degree(node)==0:
             leaves.add(node)
         if redNw.in_degree(node)==0:
-            root = node        
+            root = node
     redNw.add_edge(-2,root)
     done = False
     while not done:
@@ -92,7 +92,7 @@ def ClassOrchard(network):
         if len(redNw.edges)==1:
             return True
         done = checkedAllLeavesMaybe
-    return False    
+    return False
 
 
 ###############  Some subroutines for the class checkers   ###################
@@ -192,7 +192,7 @@ def OrientationAlgorithmBinary(network,rootEdge,reticulations):
         orientingNodeInDeg = diNetwork.in_degree(orientingNode)
         if orientingNodeInDeg>2 or (orientingNodeInDeg==2 and orientingNode not in reticulations):
             network.add_edges_from([rootEdge])
-            return False            
+            return False
         children = set(network.neighbors(orientingNode))-set(diNetwork.predecessors(orientingNode))
         newArcs = []
         for child in children:
@@ -217,7 +217,7 @@ def RootAtEdge(network,rootEdge,ClassChecker=ClassAllNetworks):
         result = OrientationAlgorithmBinary(network,rootEdge,set(reticulations))
         if result and ClassChecker(result):
             return reticulations
-    return False      
+    return False
 
 def ClassRootableStupid(network,ClassChecker=ClassAllNetworks):
     rootings = dict()
@@ -241,7 +241,7 @@ def GeneratorWithDeg2(network):
         current = todoNodes.pop()
         if generator.degree(current)==1:
             generator.remove_node(current)
-    return generator    
+    return generator
 
 #Finds the side of the generator with deg2 nodes that starts with a given generator node and an adjacent node
 def CompleteSide(generator,generatorNode,sideNode):
@@ -255,11 +255,11 @@ def CompleteSide(generator,generatorNode,sideNode):
         previous,current = current,next
         side+=(current,)
     return side
-        
+
 #Returns all sides of the network
 #Assumes no pendant subtrees
 def FindSides(network):
-    generator = GeneratorWithDeg2(network)    
+    generator = GeneratorWithDeg2(network)
     todoNodes = list(generator.nodes)
     sides=set()
     #Do something separate for cycles: in those cases, the sides do not end in generator nodes
@@ -278,8 +278,8 @@ def FindSides(network):
         side = tuple([cycle[-1]]+cycle+[cycle[0]])
         sides.add(side)
     return sides
-    
-        
+
+
 #Reduces chains in the network using the set of sides
 #When reducing, it removes internal nodes of the chain.
 #Assumes no pendant subtrees
@@ -294,7 +294,7 @@ def ReduceChains(network, length):
         else:
             newSide = side[:]
         sidesDict[newSide]=side
-        #Now add the new side to the new network    
+        #Now add the new side to the new network
         previousNode = newSide[0]
         for node in newSide[1:]:
             reducedNetwork.add_edge(previousNode, node)
@@ -320,14 +320,14 @@ def ReductionRooting(network,length,ClassChecker=ClassAllNetworks):
     redRootings = ClassRootableStupid(redNw,ClassChecker)
     rootings = dict()
     for redSide,side in sidesDict.items():
-        if len(side)<length+3:
+        if len(side)<=length+2:
         #Go through all leaf-edges and internal edges and copy the rootability to the network
             previous = redSide[0]
             for current in redSide[1:]:
                 #Check if there is a leaf edge attached to current node
                 for nb in redNw.neighbors(current):
                     nbDegree = redNw.degree(nb)
-                    if nbDegree==1: 
+                    if nbDegree==1:
                         #Check the leaf edge (current,nb)
                         rootingAtEdge = redRootings.get((current,nb))
                         if not rootingAtEdge:
@@ -340,7 +340,7 @@ def ReductionRooting(network,length,ClassChecker=ClassAllNetworks):
                     rootingAtEdge = redRootings.get((current,previous))
                 if rootingAtEdge:
                     rootings[(previous,current)] = rootingAtEdge
-                previous = current            
+                previous = current
         else:
         #Infer rootings from leaf edge rootability.
             n = len(side) - 2
@@ -349,7 +349,7 @@ def ReductionRooting(network,length,ClassChecker=ClassAllNetworks):
                 #Find the leaf edge attached to current node
                 for nb in redNw.neighbors(current):
                     nbDegree = redNw.degree(nb)
-                    if nbDegree==1: 
+                    if nbDegree==1:
                         leaf = nb
                 #Check the leaf edge (current,leaf)
                 rootingAtEdge = redRootings.get((current,leaf))
@@ -398,10 +398,10 @@ def ReductionRooting(network,length,ClassChecker=ClassAllNetworks):
                             else:
                                 #If the reticulation node is not on the root side, we can take this node as the reticulation (by placing the leaves back where they were removed)
                                 newRooting+=[reticNode]
-                        rootings[(side[j],side[j+1])] = tuple(newRooting)                        
+                        rootings[(side[j],side[j+1])] = tuple(newRooting)
     return rootings
 
-        
+
 
 #Determines one Class-rootedge of the network if it exists (False otherwise)
 #Uses ClassChecker to check whether an orientation is in the desired class
@@ -415,8 +415,8 @@ def LevelStuff(network,length,ClassChecker=ClassAllNetworks):
     blobOrientations = []
     #For each blob, compute the orientations
     for blob in blobs:
-        if len(blob)>2: 
-        #Add leaves to degree 2 nodes in the biconnected component first, to make actual blobs               
+        if len(blob)>2:
+        #Add leaves to degree 2 nodes in the biconnected component first, to make actual blobs
             leafEdges = []
             for node in blob.nodes:
                 if blob.degree(node)==2:
@@ -445,10 +445,10 @@ def LevelStuff(network,length,ClassChecker=ClassAllNetworks):
     #Find the root of T_CN if it exists; if it does not, the network is not C-orientable
     rootComponent = IsRootedTree(T_CN)
     if not type(rootComponent)==int:
-        return False    
-        
-        
-    #Go through all edges to find all orientations    
+        return False
+
+
+    #Go through all edges to find all orientations
     rootings = dict()
     rootComponentNodes = T_CN.nodes(data=True)[rootComponent]['members']
     for rootEdge in network.edges:
@@ -462,7 +462,7 @@ def LevelStuff(network,length,ClassChecker=ClassAllNetworks):
                     if len(blob)==2:
                         edgesToContinueAt = set([rootEdge,(rootEdge[1],rootEdge[0])])
                         break
-                    elif rootEdge in blobOrientations[i]: 
+                    elif rootEdge in blobOrientations[i]:
                         reticulations+=blobOrientations[i][rootEdge]
                         edgesToContinueAt = LeafEdges(blob)
                         break
@@ -471,7 +471,7 @@ def LevelStuff(network,length,ClassChecker=ClassAllNetworks):
                         edgesToContinueAt = LeafEdges(blob)
                         break
             #If it is a root edge, continue finding the whole orientation
-            if edgesToContinueAt:     
+            if edgesToContinueAt:
                 #Continue to root all other blobs, by moving away from the blob with the root.
                 #edgesToContinueAt keeps a list of edges along which we still have to move away from the root
                 while edgesToContinueAt:
@@ -496,11 +496,11 @@ def LevelStuff(network,length,ClassChecker=ClassAllNetworks):
                 rootings[rootEdge]=reticulations
     return rootings
 
-            
-            
-            
-            
-                   
+
+
+
+
+
 
 #Returns a list of leaf edges in the order (neighbor,leaf) for each edge
 def LeafEdges(network):
@@ -510,8 +510,8 @@ def LeafEdges(network):
             for nb in network.neighbors(node):
                 leafEdges.add((nb,node))
     return leafEdges
-                        
-            
+
+
 
 
 
