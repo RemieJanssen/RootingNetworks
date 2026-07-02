@@ -23,19 +23,19 @@ def read_network_file(filename):
 
 def get_class_checker_and_chain_length(nwClass):
     """Set the class parameters corresponding to nwClass abbreviation"""
-    ClassChecker = ClassAllNetworks
+    ClassChecker = is_network
     length = 2
     if nwClass == "TC":
-        ClassChecker = ClassTreeChild
+        ClassChecker = is_tree_child
         length = 3
     elif nwClass == "SF":
-        ClassChecker = ClassStackFree
+        ClassChecker = is_stack_free
         length = 3
     elif nwClass == "O":
-        ClassChecker = ClassOrchard
+        ClassChecker = is_orchard
         length = 3
     elif nwClass == "TB":
-        ClassChecker = ClassTreeBased
+        ClassChecker = is_tree_based
         length = 2
     return ClassChecker, length
 
@@ -52,7 +52,7 @@ def set_output(network, orientations, simple):
             output += "The orientations of the network consist of the following root edges and reticulations:\r\n"
         for rootEdge, reticulations in orientations.items():
             # compute the actual orientation, instead of only the retculations.
-            dinetwork = OrientationAlgorithmBinary(network, rootEdge, reticulations)
+            dinetwork = constrained_orientation_binary(network, rootEdge, reticulations)
             if not simple:
                 output += (
                     "\r\n\r\nroot edge:\r\n   "

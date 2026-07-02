@@ -2,7 +2,7 @@ import pytest
 
 from expected_outcomes import outcomes
 from phyloroot.main_cli import get_class_checker_and_chain_length, read_network_file
-from phyloroot.rooting import LevelStuff
+from phyloroot.rooting import c_orientation_fpt_level, c_orientation_exponential
 
 tests = [
     {
@@ -24,10 +24,10 @@ tests = [
     ],
     ids=[test["testname"] for test in tests],
 )
-def test_level_class(network_path, class_abbr, root_edges, non_root_edges):
+def test_fpt_level(network_path, class_abbr, root_edges, non_root_edges):
     network = read_network_file(network_path)
     ClassChecker, length = get_class_checker_and_chain_length(class_abbr)
-    orientations = LevelStuff(network, length, ClassChecker)
+    orientations = c_orientation_fpt_level(network, length, ClassChecker)
     if not orientations:
         orientations = []
     found_root_edges = {tuple(sorted(edge)) for edge in orientations}
@@ -37,4 +37,28 @@ def test_level_class(network_path, class_abbr, root_edges, non_root_edges):
         non_root_edges = {tuple(sorted(edge)) for edge in non_root_edges}
         root_edges = {tuple(sorted(edge)) for edge in network.edges}.difference(non_root_edges)
     assert found_root_edges == root_edges
+
+
+@pytest.mark.parametrize(
+    "network_path, class_abbr, root_edges, non_root_edges",
+    [
+        (test["network_path"], test["class_abbr"], test["root_edges"], test["non_root_edges"])
+        for test in tests
+    ],
+    ids=[test["testname"] for test in tests],
+)
+def test_exponential(network_path, class_abbr, root_edges, non_root_edges):
+    network = read_network_file(network_path)
+    ClassChecker, _ = get_class_checker_and_chain_length(class_abbr)
+    orientations = c_orientation_exponential(network, ClassChecker)
+    if not orientations:
+        orientations = []
+    found_root_edges = {tuple(sorted(edge)) for edge in orientations}
+    if root_edges is not None:
+        root_edges = {tuple(sorted(edge)) for edge in root_edges}
+    else:
+        non_root_edges = {tuple(sorted(edge)) for edge in non_root_edges}
+        root_edges = {tuple(sorted(edge)) for edge in network.edges}.difference(non_root_edges)
+    assert found_root_edges == root_edges
+
 
