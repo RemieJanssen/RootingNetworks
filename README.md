@@ -39,7 +39,7 @@ set new version number in master branch
 release current version
 ```
 git checkout release
-git merge main
+git merge master
 git tag [version number]
 git push --atomic origin release [version number]
 ```
