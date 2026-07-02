@@ -13,7 +13,7 @@ Types of changes:
 - Fixed for any bug fixes.
 - Security in case of vulnerabilities.
 
-## [1.0.0] - (Unreleased)
+## [0.2.0] - (2026-07-02)
 
  - Automated release on pypi via GitHub Actions.
  - Implement Urata et al.'s improvement using a cycle basis for the exponential part of the algorithm.
