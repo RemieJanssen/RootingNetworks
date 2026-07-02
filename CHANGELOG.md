@@ -16,7 +16,6 @@ Types of changes:
 ## [0.2.0] - (2026-07-02)
 
  - Automated release on pypi via GitHub Actions.
- - Implement Urata et al.'s improvement using a cycle basis for the exponential part of the algorithm.
  - Fix bug: rooting class all needs chain reduction of length 2 instead of 1.
 
 ## [0.1.0] - (2023-06-02)
