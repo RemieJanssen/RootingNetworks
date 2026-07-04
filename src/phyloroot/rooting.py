@@ -8,6 +8,7 @@ from phyloroot.class_checkers import (
 from phyloroot.constrained_orientation import constrained_orientation_binary
 from phyloroot.chain_reduction import reduce_chains
 
+
 def get_leaf_adjacent_to_node(network, node):
     """Returns the leaf node adjacent to a node in the network, if it exists.
 
@@ -83,7 +84,9 @@ def c_orientation_exponential(network, class_checker=is_network):
     return rootings
 
 
-def expand_reduced_rootings_for_short_side(reduced_network, reduced_rootings, reduced_side):
+def expand_reduced_rootings_for_short_side(
+    reduced_network, reduced_rootings, reduced_side
+):
     """Expands the rootings of a reduced network to the original network for sides of length <= ell+2
 
     Args:
@@ -93,12 +96,19 @@ def expand_reduced_rootings_for_short_side(reduced_network, reduced_rootings, re
         reduced_side (list(int)): The list of nodes in the reduced side
 
     Returns:
-        dict(tuple(int)): A dict with all valid C-root-edges on the side of the original network corresponding to `reduced_side` 
+        dict(tuple(int)): A dict with all valid C-root-edges on the side of the original network corresponding to `reduced_side`
         as keys, and a tuple of reticulation nodes of a valid C-orientation with this root edge of `network`.
     """
 
-    all_side_edges = [(reduced_side[i], reduced_side[i + 1]) for i in range(len(reduced_side) - 1)]
-    all_side_leaf_edges = [(node, nb) for node in reduced_side[1:-1] for nb in reduced_network.neighbors(node) if reduced_network.degree(nb) == 1]
+    all_side_edges = [
+        (reduced_side[i], reduced_side[i + 1]) for i in range(len(reduced_side) - 1)
+    ]
+    all_side_leaf_edges = [
+        (node, nb)
+        for node in reduced_side[1:-1]
+        for nb in reduced_network.neighbors(node)
+        if reduced_network.degree(nb) == 1
+    ]
     rootings = dict()
     for edge in all_side_edges + all_side_leaf_edges:
         rootingAtEdge = reduced_rootings.get(edge)
@@ -108,7 +118,10 @@ def expand_reduced_rootings_for_short_side(reduced_network, reduced_rootings, re
             rootings[edge] = rootingAtEdge
     return rootings
 
-def expand_reduced_rootings_for_long_side(network, reduced_network, reduced_rootings, reduced_side, side, ell):
+
+def expand_reduced_rootings_for_long_side(
+    network, reduced_network, reduced_rootings, reduced_side, side, ell
+):
     """Expands the rootings of a reduced network to the original network for sides of length > ell+2
 
     Uses the fact that the rootings of the network are determined by the rootings at the leaf edges of the reduced side.
@@ -121,15 +134,15 @@ def expand_reduced_rootings_for_long_side(network, reduced_network, reduced_root
         reduced_side (list(int)): The list of nodes in the reduced side
         side (list(int)): The list of nodes in the original side
         ell (int): The length to which chains are reduced.
-    
+
     Returns:
-        dict(tuple(int)): A dict with all valid C-root-edges on the side of the original network corresponding to `reduced_side` 
+        dict(tuple(int)): A dict with all valid C-root-edges on the side of the original network corresponding to `reduced_side`
         as keys, and a tuple of reticulation nodes of a valid C-orientation with this root edge of `network`.
     """
 
     rootings = dict()
     # Infer rootings from leaf edge rootability.
-    n = len(side) - 2 # number of leaves on the side, called n in the paper
+    n = len(side) - 2  # number of leaves on the side, called n in the paper
     for index, current in enumerate(reduced_side[1:-1]):
         i = index + 1
         # Find the leaf edge attached to current node
@@ -146,42 +159,42 @@ def expand_reduced_rootings_for_long_side(network, reduced_network, reduced_root
         for j in range(i, n - (ell - i) + 1):
             # Find the leaf edge at position j
             side_node = side[j]
-            leafEdge = (side_node, get_leaf_adjacent_to_node(network, side_node))
+            leaf_edge = (side_node, get_leaf_adjacent_to_node(network, side_node))
             # Now we extend to an orientation of the original network
             # be careful with inferring orientation: there can be a reticulation on the root side.
             # In that case, shift the reticulation to the relative position to the root as in the reduced network
-            newRooting = []
+            new_rooting = []
             for reticulation in rooting_at_edge:
                 if reticulation in reduced_side[1:-1]:
                     # Here, we have found a reticulation node reticNode on the reduced side containing the root.
                     # We find its position on the reduced side, and give it the same relative position to the root on the original network
-                    reducedIndex = reduced_side.index(reticulation)
+                    reduced_index = reduced_side.index(reticulation)
                     # Current position of the root is j
-                    # In the reduced side, the root is at position i, and the retic at position reducedIndex, a difference of reducedIndex-i.
-                    newRooting += [side[j + reducedIndex - i]]
+                    # In the reduced side, the root is at position i, and the retic at position reduced_index, a difference of reduced_index-i.
+                    new_rooting += [side[j + reduced_index - i]]
                 else:
                     # If the reticulation node is not on the root side, we can take this node as the reticulation (by placing the leaves back where they were removed)
-                    newRooting += [reticulation]
-            rootings[leafEdge] = tuple(newRooting)
+                    new_rooting += [reticulation]
+            rootings[leaf_edge] = tuple(new_rooting)
         # Now the internal edges of the side
         for j in range(i - 1, n - (ell - i) + 1):
             # Do something similar as for the leaf edges, to find the right reticulation node on the root side
-            newRooting = []
+            new_rooting = []
             for reticulation in rooting_at_edge:
                 if reticulation in reduced_side[1:-1]:
-                    reducedIndex = reduced_side.index(reticulation)
-                    # In the reduced side, the root is at position i, and the retic at position reducedIndex, a difference of reducedIndex-i.
-                    # To make up for the fact that a new leaf is introduced between positions j and j+1 when we root at an internal edge
-                    # we correct the new position as follows:
-                    relativePosition = reducedIndex - i
-                    if reducedIndex < i:
-                        relativePosition += 1
-                    newRooting += [side[j + relativePosition]]
+                    reduced_index = reduced_side.index(reticulation)
+                    # In the reduced side, the root is at position i, and the reticulation at position reduced_index, a difference of reduced_index-i.
+                    # We correct for the fact that a new leaf is introduced between positions j and j+1 when we root at an internal edge:
+                    relative_position = reduced_index - i
+                    if reduced_index < i:
+                        relative_position += 1
+                    new_rooting += [side[j + relative_position]]
                 else:
                     # If the reticulation node is not on the root side, we can take this node as the reticulation (by placing the leaves back where they were removed)
-                    newRooting += [reticulation]
-            rootings[(side[j], side[j + 1])] = tuple(newRooting)
+                    new_rooting += [reticulation]
+            rootings[(side[j], side[j + 1])] = tuple(new_rooting)
     return rootings
+
 
 def c_orientation_fpt_reticulation_number(network, ell, class_checker=is_network):
     """Solves C-orientation for the given network and class
@@ -212,13 +225,22 @@ def c_orientation_fpt_reticulation_number(network, ell, class_checker=is_network
     rootings = dict()
     for reduced_side, side in sidesDict.items():
         if len(side) <= ell + 2:
-            rootings = {**rootings, **expand_reduced_rootings_for_short_side(reduced_network, reduced_rootings, reduced_side)}
+            rootings = {
+                **rootings,
+                **expand_reduced_rootings_for_short_side(
+                    reduced_network, reduced_rootings, reduced_side
+                ),
+            }
         else:
-            rootings = {**rootings, **expand_reduced_rootings_for_long_side(network, reduced_network, reduced_rootings, reduced_side, side, ell)}
+            rootings = {
+                **rootings,
+                **expand_reduced_rootings_for_long_side(
+                    network, reduced_network, reduced_rootings, reduced_side, side, ell
+                ),
+            }
     return rootings
 
 
-# Determines one Class-rootedge of the network if it exists (False otherwise)
 def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
     """Solves C-orientation for the given network and class
     This uses the FPT-time algorithm with the level as parameter
@@ -243,43 +265,45 @@ def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
         (network.subgraph(c).copy() for c in nx.biconnected_components(network))
     )
     # Prepare the partially directed network that we will condense into T_CN
-    partiallyOrientedNetwork = network.to_directed()
+    partially_oriented_network = network.to_directed()
     # Empty list to store all orientations for all blobs
-    blobOrientations = []
+    blob_orientations = []
     # For each blob, compute the orientations
     for blob in blobs:
-        if len(blob) > 2:
-            # Add leaves to degree 2 nodes in the biconnected component first, to make actual blobs
-            leafEdges = []
-            for node in blob.nodes:
-                if blob.degree(node) == 2:
-                    for nb in network.neighbors(node):
-                        if nb not in blob:
-                            leafEdges += [(node, nb)]
-            blob.add_edges_from(leafEdges)
-            # Find all rootings of the blob
-            rootingsBlob = c_orientation_fpt_reticulation_number(
-                blob, ell, ClassChecker
-            )
-            blobOrientations += [rootingsBlob]
-            if not rootingsBlob:
-                # If there is no orientation for this blob, then there is no orientation for the network.
+        if len(blob) <= 2:
+            # For trivial biconnected components, add a trivial list to the blob orientations, 
+            # so that indices still match between blobOrientations, and blobs
+            blob_orientations += [[]]
+            continue
+        # Add leaves to degree 2 nodes in the biconnected component first, to make actual blobs
+        blob_leaf_edges = []
+        for node in blob.nodes:
+            if blob.degree(node) == 2:
+                for nb in network.neighbors(node):
+                    if nb not in blob:
+                        blob_leaf_edges += [(node, nb)]
+        blob.add_edges_from(blob_leaf_edges)
+        # Find all rootings of the blob
+        blob_rootings = c_orientation_fpt_reticulation_number(
+            blob, ell, ClassChecker
+        )
+        blob_orientations += [blob_rootings]
+        if not blob_rootings:
+            # If there is no orientation for this blob, then there is no orientation for the network.
+            return False
+        # Partially orient at the leaves, according to where the blob can be rooted
+        for leaf_edge in blob_leaf_edges:
+            if (
+                leaf_edge in blob_rootings
+                or (leaf_edge[1], leaf_edge[0]) in blob_rootings
+            ):
+                continue
+            # If now both arcs are gone, there is no rooting of the original network, so we may return False
+            if not partially_oriented_network.has_edge(*leaf_edge):
                 return False
-            # Partially orient at the leaves, according to where the blob can be rooted
-            for leafEdge in leafEdges:
-                if not (
-                    leafEdge in rootingsBlob
-                    or (leafEdge[1], leafEdge[0]) in rootingsBlob
-                ):
-                    # If now both arcs are gone, there is no rooting of the original network, so we may return False
-                    if not partiallyOrientedNetwork.has_edge(*leafEdge):
-                        return False
-                    partiallyOrientedNetwork.remove_edge(leafEdge[1], leafEdge[0])
-        # For trivial biconnected components, add a trivial list to the blob orientations, so that indices still match between blobOrientations, and blobs
-        else:
-            blobOrientations += [[]]
+            partially_oriented_network.remove_edge(leaf_edge[1], leaf_edge[0])
     # Create T_CN by condensing partiallyOrientedNetwork
-    T_CN = nx.condensation(partiallyOrientedNetwork)
+    T_CN = nx.condensation(partially_oriented_network)
     # Find the root of T_CN if it exists; if it does not, the network is not C-orientable
     rootComponent = is_tree(T_CN)
     if not type(rootComponent) == int:
@@ -287,52 +311,57 @@ def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
 
     # Go through all edges to find all orientations
     rootings = dict()
-    rootComponentNodes = T_CN.nodes(data=True)[rootComponent]["members"]
+    root_component_nodes = T_CN.nodes(data=True)[rootComponent]["members"]
     for rootEdge in network.edges:
         reticulations = []
-        edgesToContinueAt = False
+        edges_to_continue_at = False
         # Check if the edge is in the rootComponent
-        if rootEdge[0] in rootComponentNodes and rootEdge[1] in rootComponentNodes:
-            # Check if the edge is a root edge of one of the blobs
+        if not (rootEdge[0] in root_component_nodes and rootEdge[1] in root_component_nodes):
+            continue
+        # Find a blob containing the root edge
+        for i, blob in enumerate(blobs):
+            if blob.has_edge(*rootEdge):
+                break
+
+        # check if the blob containing the potential root edge can be rooted at this edge, and if so, continue to root the other blobs
+        if len(blob) == 2:
+            edges_to_continue_at = set([rootEdge, (rootEdge[1], rootEdge[0])])
+        elif rootEdge in blob_orientations[i]:
+            reticulations += blob_orientations[i][rootEdge]
+            edges_to_continue_at = leaf_edges(blob)
+        elif (rootEdge[1], rootEdge[0]) in blob_orientations[i]:
+            reticulations += blob_orientations[i][(rootEdge[1], rootEdge[0])]
+            edges_to_continue_at = leaf_edges(blob)
+        else:
+            # If the blob containing the potential root edge cannot be rooted at this edge, continue to the next edge
+            continue
+
+        # Continue to root all other blobs, by moving away from the blob with the root.
+        # edges_to_continue_at keeps a list of edges along which we still have to move away from the root
+        while edges_to_continue_at:
+            edge = edges_to_continue_at.pop()
+            # find the blob this edge points to
             for i, blob in enumerate(blobs):
-                if blob.has_edge(*rootEdge):
-                    if len(blob) == 2:
-                        edgesToContinueAt = set([rootEdge, (rootEdge[1], rootEdge[0])])
+                if edge[1] in blob:
+                    # Continue at trivial biconnected components with an endpoint edge[1] (but not edge[0], to prevent cycling in the algorithm)
+                    if len(blob) == 2 and edge[0] not in blob:
+                        otherNode = False
+                        for v in blob:
+                            if v != edge[1]:
+                                otherNode = v
+                        edges_to_continue_at.add((edge[1], otherNode))
                         break
-                    elif rootEdge in blobOrientations[i]:
-                        reticulations += blobOrientations[i][rootEdge]
-                        edgesToContinueAt = leaf_edges(blob)
+                    # Continue at blobs that contain edge[1] in the interior (so the degree of edge[1] in the blob is not 1)
+                    elif len(blob) > 2 and blob.degree(edge[1]) != 1:
+                        edges_to_continue_at |= leaf_edges(blob) - set(
+                            [(edge[1], edge[0])]
+                        )
+                        if edge in blob_orientations[i]:
+                            reticulations += blob_orientations[i][edge]
+                        else:
+                            reticulations += blob_orientations[i][
+                                (edge[1], edge[0])
+                            ]
                         break
-                    elif (rootEdge[1], rootEdge[0]) in blobOrientations[i]:
-                        reticulations += blobOrientations[i][(rootEdge[1], rootEdge[0])]
-                        edgesToContinueAt = leaf_edges(blob)
-                        break
-            # If it is a root edge, continue finding the whole orientation
-            if edgesToContinueAt:
-                # Continue to root all other blobs, by moving away from the blob with the root.
-                # edgesToContinueAt keeps a list of edges along which we still have to move away from the root
-                while edgesToContinueAt:
-                    edge = edgesToContinueAt.pop()
-                    for i, blob in enumerate(blobs):
-                        if edge[1] in blob:
-                            # Continue at trivial biconnected components with an endpoint edge[1] (but not edge[0], to prevent cycling in the algorithm)
-                            if len(blob) == 2 and edge[0] not in blob:
-                                otherNode = False
-                                for v in blob:
-                                    if v != edge[1]:
-                                        otherNode = v
-                                edgesToContinueAt.add((edge[1], otherNode))
-                            # Continue at blobs that contain edge[1] in the interior (so the degree of edge[1] in the blob is not 1)
-                            elif len(blob) > 2 and blob.degree(edge[1]) != 1:
-                                edgesToContinueAt |= leaf_edges(blob) - set(
-                                    [(edge[1], edge[0])]
-                                )
-                                if edge in blobOrientations[i]:
-                                    reticulations += blobOrientations[i][edge]
-                                else:
-                                    reticulations += blobOrientations[i][
-                                        (edge[1], edge[0])
-                                    ]
-                                break
-                rootings[rootEdge] = reticulations
+        rootings[rootEdge] = reticulations
     return rootings
