@@ -278,7 +278,8 @@ def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
     partially_oriented_network = network.to_directed()
     # Empty list to store all orientations for all blobs
     blob_orientations = []
-    # For each blob, compute the orientations
+    # For each blob, compute the orientations, and orient the leaf-edges of the blobs in
+    # partially_oriented_network only in the directions that are allowed by the orientations of the blobs.
     for blob, blob_leaf_edges in blobs_and_leaf_edges:
         if len(blob) <= 2:
             # For trivial biconnected components, add a trivial list to the blob orientations, 
@@ -304,35 +305,36 @@ def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
             if not partially_oriented_network.has_edge(*leaf_edge):
                 return False
             partially_oriented_network.remove_edge(leaf_edge[1], leaf_edge[0])
-    # Create T_CN by condensing partiallyOrientedNetwork
+
+    # Create T_CN by condensing partially_oriented_network
     T_CN = nx.condensation(partially_oriented_network)
     # Find the root of T_CN if it exists; if it does not, the network is not C-orientable
-    rootComponent = is_tree(T_CN)
-    if not type(rootComponent) == int:
+    root_component = is_tree(T_CN)
+    if not type(root_component) == int:
         return False
 
-    # Go through all edges to find all orientations
+    # Go through all edges to find all root-edges
     rootings = dict()
-    root_component_nodes = T_CN.nodes(data=True)[rootComponent]["members"]
-    for rootEdge in network.edges:
-        reticulations = []
-        edges_to_continue_at = False
+    root_component_nodes = T_CN.nodes(data=True)[root_component]["members"]
+    for root_edge in network.edges:
         # Check if the edge is in the rootComponent
-        if not (rootEdge[0] in root_component_nodes and rootEdge[1] in root_component_nodes):
+        if not (root_edge[0] in root_component_nodes and root_edge[1] in root_component_nodes):
             continue
         # Find a blob containing the root edge
         for i, (blob, blob_leaf_edges) in enumerate(blobs_and_leaf_edges):
-            if blob.has_edge(*rootEdge):
+            if blob.has_edge(*root_edge):
                 break
 
+        reticulations = []
+        edges_to_continue_at = False
         # check if the blob containing the potential root edge can be rooted at this edge, and if so, continue to root the other blobs
         if len(blob) == 2:
-            edges_to_continue_at = set([rootEdge, (rootEdge[1], rootEdge[0])])
-        elif rootEdge in blob_orientations[i]:
-            reticulations += blob_orientations[i][rootEdge]
+            edges_to_continue_at = set([root_edge, (root_edge[1], root_edge[0])])
+        elif root_edge in blob_orientations[i]:
+            reticulations += blob_orientations[i][root_edge]
             edges_to_continue_at = blob_leaf_edges
-        elif (rootEdge[1], rootEdge[0]) in blob_orientations[i]:
-            reticulations += blob_orientations[i][(rootEdge[1], rootEdge[0])]
+        elif (root_edge[1], root_edge[0]) in blob_orientations[i]:
+            reticulations += blob_orientations[i][(root_edge[1], root_edge[0])]
             edges_to_continue_at = blob_leaf_edges
         else:
             # If the blob containing the potential root edge cannot be rooted at this edge, continue to the next edge
@@ -366,5 +368,5 @@ def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
                             (edge[1], edge[0])
                         ]
                     break
-        rootings[rootEdge] = reticulations
+        rootings[root_edge] = reticulations
     return rootings
