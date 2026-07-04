@@ -25,16 +25,6 @@ def get_leaf_adjacent_to_node(network, node):
     return None
 
 
-def leaf_edges(blob):
-    """Returns a list of leaf edges of the blob in the order (neighbor,leaf)"""
-    leafEdges = set()
-    for node in blob.nodes:
-        if blob.degree(node) == 1:
-            for nb in blob.neighbors(node):
-                leafEdges.add((nb, node))
-    return leafEdges
-
-
 def root_at_edge(network, root_edge, class_checker=is_network):
     """Subroutine for c_orientation_exponential.
     Checks C-orientation for a given root-edge.
@@ -241,6 +231,29 @@ def c_orientation_fpt_reticulation_number(network, ell, class_checker=is_network
     return rootings
 
 
+def get_blobs_and_leaf_edges(network):
+    """Returns a list of blobs and a list of leaf edges for the given network.
+
+    Args:
+        network (nx.Graph): The network
+    Returns:
+        tuple(list(nx.Graph), list(tuple(int))): a list of tuples, where each tuple contains a blob (as a subgraph) 
+            and a list of leaf edges (as tuples of nodes with the leaf as the second element of the pair) for that blob.
+    """
+    blobs_and_leaf_edges = []
+    for c in nx.biconnected_components(network):
+        blob = network.subgraph(c).copy()
+        leaf_edges = set()
+        for node in blob.nodes:
+            if blob.degree(node) == 2:
+                for nb in network.neighbors(node):
+                    if nb not in blob:
+                        leaf_edges.add((node, nb))
+        blob.add_edges_from(leaf_edges)
+        blobs_and_leaf_edges.append((blob, leaf_edges))
+    return blobs_and_leaf_edges
+
+
 def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
     """Solves C-orientation for the given network and class
     This uses the FPT-time algorithm with the level as parameter
@@ -260,29 +273,18 @@ def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
         reticulation nodes of a valid C-orientation with this root edge of `network`.
     """
 
-    # Calculate the blobs
-    blobs = list(
-        (network.subgraph(c).copy() for c in nx.biconnected_components(network))
-    )
+    blobs_and_leaf_edges = get_blobs_and_leaf_edges(network)
     # Prepare the partially directed network that we will condense into T_CN
     partially_oriented_network = network.to_directed()
     # Empty list to store all orientations for all blobs
     blob_orientations = []
     # For each blob, compute the orientations
-    for blob in blobs:
+    for blob, blob_leaf_edges in blobs_and_leaf_edges:
         if len(blob) <= 2:
             # For trivial biconnected components, add a trivial list to the blob orientations, 
             # so that indices still match between blobOrientations, and blobs
             blob_orientations += [[]]
             continue
-        # Add leaves to degree 2 nodes in the biconnected component first, to make actual blobs
-        blob_leaf_edges = []
-        for node in blob.nodes:
-            if blob.degree(node) == 2:
-                for nb in network.neighbors(node):
-                    if nb not in blob:
-                        blob_leaf_edges += [(node, nb)]
-        blob.add_edges_from(blob_leaf_edges)
         # Find all rootings of the blob
         blob_rootings = c_orientation_fpt_reticulation_number(
             blob, ell, ClassChecker
@@ -319,7 +321,7 @@ def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
         if not (rootEdge[0] in root_component_nodes and rootEdge[1] in root_component_nodes):
             continue
         # Find a blob containing the root edge
-        for i, blob in enumerate(blobs):
+        for i, (blob, blob_leaf_edges) in enumerate(blobs_and_leaf_edges):
             if blob.has_edge(*rootEdge):
                 break
 
@@ -328,10 +330,10 @@ def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
             edges_to_continue_at = set([rootEdge, (rootEdge[1], rootEdge[0])])
         elif rootEdge in blob_orientations[i]:
             reticulations += blob_orientations[i][rootEdge]
-            edges_to_continue_at = leaf_edges(blob)
+            edges_to_continue_at = blob_leaf_edges
         elif (rootEdge[1], rootEdge[0]) in blob_orientations[i]:
             reticulations += blob_orientations[i][(rootEdge[1], rootEdge[0])]
-            edges_to_continue_at = leaf_edges(blob)
+            edges_to_continue_at = blob_leaf_edges
         else:
             # If the blob containing the potential root edge cannot be rooted at this edge, continue to the next edge
             continue
@@ -341,27 +343,28 @@ def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
         while edges_to_continue_at:
             edge = edges_to_continue_at.pop()
             # find the blob this edge points to
-            for i, blob in enumerate(blobs):
-                if edge[1] in blob:
-                    # Continue at trivial biconnected components with an endpoint edge[1] (but not edge[0], to prevent cycling in the algorithm)
-                    if len(blob) == 2 and edge[0] not in blob:
-                        otherNode = False
-                        for v in blob:
-                            if v != edge[1]:
-                                otherNode = v
-                        edges_to_continue_at.add((edge[1], otherNode))
-                        break
-                    # Continue at blobs that contain edge[1] in the interior (so the degree of edge[1] in the blob is not 1)
-                    elif len(blob) > 2 and blob.degree(edge[1]) != 1:
-                        edges_to_continue_at |= leaf_edges(blob) - set(
-                            [(edge[1], edge[0])]
-                        )
-                        if edge in blob_orientations[i]:
-                            reticulations += blob_orientations[i][edge]
-                        else:
-                            reticulations += blob_orientations[i][
-                                (edge[1], edge[0])
-                            ]
-                        break
+            for i, (blob, blob_leaf_edges) in enumerate(blobs_and_leaf_edges):
+                if edge[1] not in blob:
+                    continue
+                # Continue at trivial biconnected components with an endpoint edge[1] (but not edge[0], to prevent cycling in the algorithm)
+                if len(blob) == 2 and edge[0] not in blob:
+                    otherNode = False
+                    for v in blob:
+                        if v != edge[1]:
+                            otherNode = v
+                    edges_to_continue_at.add((edge[1], otherNode))
+                    break
+                # Continue at blobs that contain edge[1] in the interior (so the degree of edge[1] in the blob is not 1)
+                if len(blob) > 2 and blob.degree(edge[1]) != 1:
+                    edges_to_continue_at |= blob_leaf_edges - set(
+                        [(edge[1], edge[0])]
+                    )
+                    if edge in blob_orientations[i]:
+                        reticulations += blob_orientations[i][edge]
+                    else:
+                        reticulations += blob_orientations[i][
+                            (edge[1], edge[0])
+                        ]
+                    break
         rootings[rootEdge] = reticulations
     return rootings
