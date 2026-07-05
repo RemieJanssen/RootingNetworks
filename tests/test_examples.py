@@ -2,7 +2,8 @@ import pytest
 
 from expected_outcomes import outcomes
 from phyloroot.main_cli import get_class_checker_and_chain_length, read_network_file
-from phyloroot.rooting import c_orientation_fpt_level, c_orientation_exponential
+from phyloroot.rooting_exponential import c_orientation_exponential
+from phyloroot.rooting_fpt_level import c_orientation_fpt_level
 
 tests = [
     {

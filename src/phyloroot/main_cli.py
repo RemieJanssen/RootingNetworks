@@ -3,7 +3,7 @@ import csv
 import argparse
 
 from phyloroot.class_checkers import is_network, is_tree_child, is_stack_free, is_orchard, is_tree_based
-from phyloroot.rooting import c_orientation_fpt_level
+from phyloroot.rooting_fpt_level import c_orientation_fpt_level
 from phyloroot.constrained_orientation import constrained_orientation_binary
 
 def read_network_file(filename):
