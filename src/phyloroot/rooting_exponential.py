@@ -6,7 +6,7 @@ from phyloroot.class_checkers import is_network
 from phyloroot.constrained_orientation import constrained_orientation_binary
 
 
-def _combinations_from_product(cycle_basis, chosen=None, i=0):
+def combinations_from_product(cycle_basis, chosen=None, i=0):
     """Generates all combinations of reticulations from the cycle basis.
 
     Args:
@@ -17,27 +17,15 @@ def _combinations_from_product(cycle_basis, chosen=None, i=0):
     chosen = chosen or set()
 
     if i == len(cycle_basis):
-        yield chosen
+        yield chosen.copy()
         return
 
     for v in cycle_basis[i]:
         if v in chosen:
             continue 
         chosen.add(v)
-        yield from _combinations_from_product(cycle_basis, chosen, i + 1)
+        yield from combinations_from_product(cycle_basis, chosen, i + 1)
         chosen.remove(v)
-
-
-def combinations_from_product(cycle_basis):
-    """Generates all combinations of reticulations from the cycle basis.
-
-    Args:
-        cycle_basis (list(list(int))): A cycle basis of the network
-    Yields:
-        tuple(int): A combination of reticulations, one from each cycle in the cycle basis    
-    """
-    for comb in _combinations_from_product(cycle_basis, None, 0):
-        yield comb
 
 
 def root_at_edge(network, root_edge, class_checker=is_network):
