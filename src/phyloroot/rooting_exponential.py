@@ -6,27 +6,25 @@ from phyloroot.class_checkers import is_network
 from phyloroot.constrained_orientation import constrained_orientation_binary
 
 
-def combinations_from_product(cycle_basis, chosen=None, i=0):
+def combinations_from_basis(cycle_basis, internal_nodes, v_masks):
     """Generates all combinations of reticulations from the cycle basis.
 
     Args:
         cycle_basis (list(list(int))): A cycle basis of the network
+        internal_nodes (list(int)): A list of internal nodes in the network
+        v_masks (dict(int, int)): A dictionary mapping each internal node to a bitmask
+            indicating which cycles it belongs to
     Yields:
         tuple(int): A combination of reticulations, one from each cycle in the cycle basis    
     """
-    chosen = chosen or set()
+    full_mask = (1 << len(cycle_basis)) - 1
 
-    if i == len(cycle_basis):
-        yield chosen.copy()
-        return
-
-    for v in cycle_basis[i]:
-        if v in chosen:
-            continue 
-        chosen.add(v)
-        yield from combinations_from_product(cycle_basis, chosen, i + 1)
-        chosen.remove(v)
-
+    for combination in itertools.combinations(internal_nodes, len(cycle_basis)):
+        mask = 0
+        for v in combination:
+            mask |= v_masks[v]
+        if mask == full_mask:
+            yield combination
 
 def root_at_edge(network, root_edge, class_checker=is_network):
     """Subroutine for c_orientation_exponential.
@@ -55,7 +53,7 @@ def root_at_edge(network, root_edge, class_checker=is_network):
     return False
 
 
-def root_at_edge_cycle_basis(network, root_edge, cycle_basis, class_checker=is_network):
+def root_at_edge_cycle_basis(network, root_edge, cycle_basis, internal_nodes, v_masks, class_checker=is_network):
     """Subroutine for c_orientation_exponential_cycle_basis.
     Checks C-orientation for a given root-edge.
 
@@ -63,6 +61,9 @@ def root_at_edge_cycle_basis(network, root_edge, cycle_basis, class_checker=is_n
         network (nx.Graph): The network that is to be oriented
         root_edge (tuple(int, int)): An edge of `network`
         cycle_basis (list(list(int))): A cycle basis of `network`
+        internal_nodes (list(int)): A list of internal nodes in the network
+        v_masks (dict(int, int)): A dictionary mapping each internal node to a bitmask
+            indicating which cycles it belongs to
         class_checker (function: nx.DiGraph -> Bool, optional):
             A function that determines whether a network is in a certain class
 
@@ -71,7 +72,7 @@ def root_at_edge_cycle_basis(network, root_edge, cycle_basis, class_checker=is_n
            C-orientation with root edge `root_edge` of `network` if it exists,
            and False otherwise
     """
-    for reticulations_set in combinations_from_product(cycle_basis):
+    for reticulations_set in combinations_from_basis(cycle_basis, internal_nodes, v_masks):
         result = constrained_orientation_binary(network, root_edge, reticulations_set)
         if result and class_checker(result):
             return list(reticulations_set)
@@ -119,8 +120,19 @@ def c_orientation_exponential_cycle_basis(network, class_checker=is_network):
     """
     rootings = dict()
     cycle_basis = sorted(nx.minimum_cycle_basis(network), key=len)
+    # Get all internal nodes (nodes with degree > 1)
+    internal_nodes = [v for v in network.nodes if network.degree(v) > 1]
+    # Create a mask for each internal node indicating which cycles it belongs to
+    v_masks = dict()
+    for v in internal_nodes:
+        v_mask = 0
+        for i, cycle in enumerate(cycle_basis):
+            if v in cycle:
+                v_mask |= 1 << i
+        v_masks[v] = v_mask
+
     for e in network.edges:
-        result = root_at_edge_cycle_basis(network, e, cycle_basis, class_checker)
+        result = root_at_edge_cycle_basis(network, e, cycle_basis, internal_nodes, v_masks, class_checker)
         if result:
             rootings[e] = result
     return rootings
