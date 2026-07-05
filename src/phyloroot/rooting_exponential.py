@@ -21,6 +21,9 @@ def combinations_from_basis(cycle_basis, internal_nodes, v_masks):
 
     for combination in itertools.combinations(internal_nodes, len(cycle_basis)):
         mask = 0
+        # Check if the combination covers all cycles in the cycle basis
+        # note: this does not guarantee that the combination has a 1-1 mapping to the cycles, 
+        # but it is a necessary condition for such a mapping.
         for v in combination:
             mask |= v_masks[v]
         if mask == full_mask:
