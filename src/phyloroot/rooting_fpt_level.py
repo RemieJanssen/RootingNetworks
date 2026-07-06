@@ -108,7 +108,7 @@ def construct_full_orientation(blobs_and_leaf_edges, blob_orientations, root_edg
     return reticulations
 
         
-def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
+def c_orientation_fpt_level(network, ell, ClassChecker=is_network, use_cycle_basis=True):
     """Solves C-orientation for the given network and class
     This uses the FPT-time algorithm with the level as parameter
     (Algorithm 4) from the paper "Orienting Undirected Phylogenetic Networks".
@@ -121,6 +121,8 @@ def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
         ell (int): The length to which chains are reduced.
         class_checker (function: nx.DiGraph -> Bool, optional):
             A function that determines whether a network is in a certain class
+        use_cycle_basis (bool, optional):
+            Whether to use the cycle basis method to restrict the possible reticulations
 
     Returns:
         dict(tuple(int): A dict with all valid C-root-edges as keys, and a tuple of
@@ -142,7 +144,7 @@ def c_orientation_fpt_level(network, ell, ClassChecker=is_network):
             continue
         # Find all rootings of the blob
         blob_rootings = c_orientation_fpt_reticulation_number(
-            blob, ell, ClassChecker
+            blob, ell, ClassChecker, use_cycle_basis=use_cycle_basis
         )
         blob_orientations += [blob_rootings]
         if not blob_rootings:

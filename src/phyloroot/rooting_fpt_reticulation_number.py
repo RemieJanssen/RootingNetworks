@@ -1,6 +1,6 @@
 from phyloroot.class_checkers import is_network
 from phyloroot.chain_reduction import reduce_chains
-from phyloroot.rooting_exponential import c_orientation_exponential
+from phyloroot.rooting_exponential import c_orientation_exponential, c_orientation_exponential_cycle_basis
 
 def get_leaf_adjacent_to_node(network, node):
     """Returns the leaf node adjacent to a node in the network, if it exists.
@@ -129,7 +129,7 @@ def expand_reduced_rootings_for_long_side(
     return rootings
 
 
-def c_orientation_fpt_reticulation_number(network, ell, class_checker=is_network):
+def c_orientation_fpt_reticulation_number(network, ell, class_checker=is_network, use_cycle_basis=True):
     """Solves C-orientation for the given network and class
     This uses the FPT-time algorithm with the reticulation number as parameter
     (Algorithm 3) from the paper "Orienting Undirected Phylogenetic Networks".
@@ -144,6 +144,8 @@ def c_orientation_fpt_reticulation_number(network, ell, class_checker=is_network
         ell (int): The length to which chains are reduced.
         class_checker (function: nx.DiGraph -> Bool, optional):
             A function that determines whether a network is in a certain class
+        use_cycle_basis (bool, optional):
+            Whether to use the cycle basis method to restrict the possible reticulations
 
     Returns:
         dict(tuple(int)): A dict with all valid C-root-edges as keys, and a tuple of
@@ -154,7 +156,10 @@ def c_orientation_fpt_reticulation_number(network, ell, class_checker=is_network
         # In this case, the chain reduction would result in parallel edges, so keep the chain length 3 in this case.
         ell = 3
     reduced_network, sidesDict = reduce_chains(network, ell)
-    reduced_rootings = c_orientation_exponential(reduced_network, class_checker)
+    if use_cycle_basis:
+        reduced_rootings = c_orientation_exponential_cycle_basis(reduced_network, class_checker)
+    else:
+        reduced_rootings = c_orientation_exponential(reduced_network, class_checker)
     rootings = dict()
     for reduced_side, side in sidesDict.items():
         if len(side) <= ell + 2:
