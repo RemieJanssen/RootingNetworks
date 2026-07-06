@@ -99,6 +99,8 @@ def root_at_edge_cycle_basis_product(network, root_edge, cycle_basis, class_chec
     """
     for reticulations in itertools.product(*cycle_basis):
         reticulations_set = set(reticulations)
+        if len(reticulations_set) != len(cycle_basis):
+            continue
         result = constrained_orientation_binary(network, root_edge, reticulations_set)
         if result and class_checker(result):
             return list(reticulations_set)
