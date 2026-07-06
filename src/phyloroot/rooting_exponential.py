@@ -6,6 +6,27 @@ from phyloroot.class_checkers import is_network
 from phyloroot.constrained_orientation import constrained_orientation_binary
 
 
+def product_without_duplicates(lists, chosen=None, i=0):
+    """Generates the Cartesian product of a list of lists, but skips combinations with duplicates.
+
+    Args:
+        lists (list(list(int))): A list of lists, where each inner list contains elements to combine.
+    Yields:
+        set(int): A combination of elements, one from each inner list, without duplicates.
+    """
+    if chosen is None:
+        chosen = []
+    if i == len(lists):
+        yield set(chosen)
+    else:
+        for item in lists[i]:
+            if item in chosen:
+                continue
+            chosen.append(item)
+            yield from product_without_duplicates(lists, chosen, i + 1)
+            chosen.pop()
+
+
 def combinations_restricted(cycle_basis, internal_nodes, v_masks):
     """Generates all combinations of reticulations and restricts to the cycle basis.
 
@@ -97,10 +118,7 @@ def root_at_edge_cycle_basis_product(network, root_edge, cycle_basis, class_chec
            C-orientation with root edge `root_edge` of `network` if it exists,
            and False otherwise
     """
-    for reticulations in itertools.product(*cycle_basis):
-        reticulations_set = set(reticulations)
-        if len(reticulations_set) != len(cycle_basis):
-            continue
+    for reticulations_set in product_without_duplicates(cycle_basis):
         result = constrained_orientation_binary(network, root_edge, reticulations_set)
         if result and class_checker(result):
             return list(reticulations_set)
