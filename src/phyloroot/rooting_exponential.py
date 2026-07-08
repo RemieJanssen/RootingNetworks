@@ -16,6 +16,7 @@ def product_without_duplicates(lists, chosen=None, i=0):
     """
     if chosen is None:
         chosen = []
+        lists = sorted(lists, key=len)  # Sort the lists by length to optimize the search
     if i == len(lists):
         yield set(chosen)
     else:
